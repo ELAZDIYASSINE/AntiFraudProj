@@ -20,7 +20,8 @@ st.set_page_config(
     page_title="FraudGuard AI - Détection de Fraude",
     page_icon="🛡️",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
+    max_upload_size=1024  # 1GB in MB
 )
 
 # Custom CSS for modern SaaS design

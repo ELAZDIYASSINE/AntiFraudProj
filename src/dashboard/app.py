@@ -871,28 +871,27 @@ def main():
         st.markdown("### 📊 Analyse des Fraudes")
         
         # Create tabs for different charts
-        chart_tab1, chart_tab2 = st.tabs(["Taux de Fraude par Type", "Distribution par Montant"])
+        chart_tab1, chart_tab2 = st.tabs(["Nombre de Fraudes par Type", "Distribution par Montant"])
         
         with chart_tab1:
-            # Fraud rate by transaction type
+            # Number of frauds by transaction type
             fraud_by_type = df_results.groupby('type').agg({
                 'is_fraud': ['count', 'sum']
             }).reset_index()
             fraud_by_type.columns = ['type', 'total', 'fraud_count']
-            fraud_by_type['fraud_rate'] = (fraud_by_type['fraud_count'] / fraud_by_type['total'] * 100).round(2)
             
             fig_type = px.bar(
                 fraud_by_type,
                 x='type',
-                y='fraud_rate',
-                title='Taux de Fraude par Type de Transaction',
-                labels={'fraud_rate': 'Taux de Fraude (%)', 'type': 'Type de Transaction'},
-                color='fraud_rate',
+                y='fraud_count',
+                title='Nombre de Fraudes par Type de Transaction',
+                labels={'fraud_count': 'Nombre de Fraudes', 'type': 'Type de Transaction'},
+                color='fraud_count',
                 color_continuous_scale='Reds',
-                text='fraud_rate'
+                text='fraud_count'
             )
-            fig_type.update_traces(texttemplate='%{text:.2f}%', textposition='outside')
-            fig_type.update_layout(yaxis_title='Taux de Fraude (%)', showlegend=False)
+            fig_type.update_traces(texttemplate='%{y}', textposition='outside')
+            fig_type.update_layout(yaxis_title='Nombre de Fraudes', showlegend=False)
             st.plotly_chart(fig_type, use_container_width=True)
         
         with chart_tab2:

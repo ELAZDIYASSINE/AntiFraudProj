@@ -865,50 +865,61 @@ def main():
         except Exception as e:
             st.error(f"Erreur lors de l'analyse du fichier: {str(e)}")
     
-    # Model Performance Section
-    st.markdown("---")
-    st.markdown("### 🤖 Performance du Modèle")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        precision = np.random.uniform(0.95, 0.99)
-        st.markdown("""
-        <div style='display: flex; align-items: center; gap: 12px; margin-bottom: 8px;'>
-            <span style='font-size: 1.5rem;'>🎯</span>
-            <span style='color: #8B949E; font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;'>Précision</span>
-        </div>
-        """, unsafe_allow_html=True)
-        st.markdown(f"<div style='font-size: 2rem; font-weight: 700; color: #E6EDF3;'>{precision:.2%}</div>", unsafe_allow_html=True)
-        delta = np.random.uniform(-0.01, 0.01)
-        delta_color = "#22C55E" if delta >= 0 else "#EF4444"
-        st.markdown(f"<div style='color: {delta_color}; font-size: 0.75rem;'>{delta:+.2%}</div>", unsafe_allow_html=True)
-    
-    with col2:
-        recall = np.random.uniform(0.90, 0.95)
-        st.markdown("""
-        <div style='display: flex; align-items: center; gap: 12px; margin-bottom: 8px;'>
-            <span style='font-size: 1.5rem;'>📈</span>
-            <span style='color: #8B949E; font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;'>Rappel</span>
-        </div>
-        """, unsafe_allow_html=True)
-        st.markdown(f"<div style='font-size: 2rem; font-weight: 700; color: #E6EDF3;'>{recall:.2%}</div>", unsafe_allow_html=True)
-        delta = np.random.uniform(-0.01, 0.01)
-        delta_color = "#22C55E" if delta >= 0 else "#EF4444"
-        st.markdown(f"<div style='color: {delta_color}; font-size: 0.75rem;'>{delta:+.2%}</div>", unsafe_allow_html=True)
-    
-    with col3:
-        f1_score = np.random.uniform(0.92, 0.97)
-        st.markdown("""
-        <div style='display: flex; align-items: center; gap: 12px; margin-bottom: 8px;'>
-            <span style='font-size: 1.5rem;'>⚡</span>
-            <span style='color: #8B949E; font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;'>Score F1</span>
-        </div>
-        """, unsafe_allow_html=True)
-        st.markdown(f"<div style='font-size: 2rem; font-weight: 700; color: #E6EDF3;'>{f1_score:.2%}</div>", unsafe_allow_html=True)
-        delta = np.random.uniform(-0.01, 0.01)
-        delta_color = "#22C55E" if delta >= 0 else "#EF4444"
-        st.markdown(f"<div style='color: {delta_color}; font-size: 0.75rem;'>{delta:+.2%}</div>", unsafe_allow_html=True)
+    # Analytics Charts Section (only show if data has been analyzed)
+    if uploaded_file is not None and 'df_results' in locals():
+        st.markdown("---")
+        st.markdown("### 📊 Analyse des Fraudes")
+        
+        # Create tabs for different charts
+        chart_tab1, chart_tab2 = st.tabs(["Taux de Fraude par Type", "Distribution par Montant"])
+        
+        with chart_tab1:
+            # Fraud rate by transaction type
+            fraud_by_type = df_results.groupby('type').agg({
+                'is_fraud': ['count', 'sum']
+            }).reset_index()
+            fraud_by_type.columns = ['type', 'total', 'fraud_count']
+            fraud_by_type['fraud_rate'] = (fraud_by_type['fraud_count'] / fraud_by_type['total'] * 100).round(2)
+            
+            fig_type = px.bar(
+                fraud_by_type,
+                x='type',
+                y='fraud_rate',
+                title='Taux de Fraude par Type de Transaction',
+                labels={'fraud_rate': 'Taux de Fraude (%)', 'type': 'Type de Transaction'},
+                color='fraud_rate',
+                color_continuous_scale='Reds',
+                text='fraud_rate'
+            )
+            fig_type.update_traces(texttemplate='%{text:.2f}%', textposition='outside')
+            fig_type.update_layout(yaxis_title='Taux de Fraude (%)', showlegend=False)
+            st.plotly_chart(fig_type, use_container_width=True)
+        
+        with chart_tab2:
+            # Fraud distribution by amount range
+            df_results['amount_range'] = pd.cut(
+                df_results['amount'],
+                bins=[0, 100, 500, 1000, 5000, 10000, float('inf')],
+                labels=['0-100', '100-500', '500-1000', '1000-5000', '5000-10000', '10000+']
+            )
+            
+            fraud_by_amount = df_results.groupby(['amount_range', 'is_fraud']).size().unstack(fill_value=0)
+            
+            fig_amount = px.bar(
+                fraud_by_amount,
+                title='Distribution des Transactions par Plage de Montant',
+                labels={'value': 'Nombre de Transactions', 'amount_range': 'Plage de Montant ($)'},
+                barmode='group',
+                color_discrete_map={True: '#EF4444', False: '#22C55E'}
+            )
+            fig_amount.update_layout(
+                xaxis_title='Plage de Montant ($)',
+                yaxis_title='Nombre de Transactions',
+                legend_title='Fraude',
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            )
+            fig_amount.for_each_trace(lambda t: t.update(name='Fraude' if t.name == 'True' else 'Légitime'))
+            st.plotly_chart(fig_amount, use_container_width=True)
     
     # Footer
     st.markdown("---")

@@ -650,12 +650,6 @@ def main():
         st.markdown("### 🛡️ FraudGuard AI")
         st.markdown("---")
         
-        # Navigation
-        st.markdown("#### Navigation")
-        nav_option = st.radio("", ["📊 Tableau de bord", "🔍 Transactions", "🤖 Modèle", "⚙️ Paramètres"], label_visibility="collapsed")
-        
-        st.markdown("---")
-        
         # Configuration
         st.markdown("#### ⚙️ Configuration")
         

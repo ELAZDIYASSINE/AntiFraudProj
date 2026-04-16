@@ -3,6 +3,7 @@ Streamlit Dashboard for Fraud Detection Monitoring
 Real-time visualization of fraud detection metrics and statistics.
 """
 
+import os
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -262,7 +263,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # API Configuration
-API_URL = "http://localhost:8000"
+API_URL = os.getenv('API_URL', 'http://api:8000')
 
 def fetch_health():
     """Récupérer le statut de santé de l'API."""

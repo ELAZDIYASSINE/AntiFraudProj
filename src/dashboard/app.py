@@ -512,6 +512,12 @@ def main():
             """, unsafe_allow_html=True)
             st.warning("Utilisation de données simulées")
     
+    # Color coding function for dataframes
+    def highlight_fraud(row):
+        if 'FRAUDE' in str(row.get('is_fraud', '')):
+            return ['background-color: rgba(239, 68, 68, 0.1)'] * len(row)
+        return [''] * len(row)
+    
     # File Upload Section
     st.markdown("---")
     st.markdown("### 📤 Analyse de Fichier CSV")

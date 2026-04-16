@@ -530,7 +530,13 @@ def main():
             df_uploaded = pd.read_csv(uploaded_file)
             
             # Display basic info
-            st.success(f"Fichier chargé avec succès: {len(df_uploaded)} transactions")
+            st.success(f"Fichier chargé avec succès: {len(df_uploaded):,} transactions")
+            
+            # Limit to max 100,000 rows for performance
+            MAX_ROWS = 100000
+            if len(df_uploaded) > MAX_ROWS:
+                st.warning(f"⚠️ Fichier trop volumineux ({len(df_uploaded):,} lignes). Seules les premières {MAX_ROWS:,} lignes seront analysées.")
+                df_uploaded = df_uploaded.head(MAX_ROWS)
             
             # Convert numeric columns
             numeric_cols = ['step', 'amount', 'oldbalanceOrg', 'newbalanceOrig', 'oldbalanceDest', 'newbalanceDest']
@@ -538,11 +544,13 @@ def main():
                 if col in df_uploaded.columns:
                     df_uploaded[col] = pd.to_numeric(df_uploaded[col], errors='coerce')
             
-            # Apply fraud detection to all transactions
+            # Apply fraud detection to all transactions with progress bar
             st.info("Analyse des transactions en cours...")
+            progress_bar = st.progress(0)
             predictions_uploaded = []
             
-            for _, row in df_uploaded.iterrows():
+            total_rows = len(df_uploaded)
+            for idx, (_, row) in enumerate(df_uploaded.iterrows()):
                 fraud_score, reasons, confidence = detect_fraud_rule_based(row)
                 is_fraud = fraud_score > 0.5
                 
@@ -561,7 +569,13 @@ def main():
                     'fraud_reasons': reason_display,
                     'confidence': confidence
                 })
+                
+                # Update progress bar every 1000 rows
+                if (idx + 1) % 1000 == 0:
+                    progress = (idx + 1) / total_rows
+                    progress_bar.progress(progress)
             
+            progress_bar.progress(1.0)
             df_results = pd.DataFrame(predictions_uploaded)
             
             # Summary statistics

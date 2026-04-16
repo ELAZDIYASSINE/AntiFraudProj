@@ -15,6 +15,9 @@ import time
 from datetime import datetime, timedelta
 import json
 
+# Increase pandas styler max elements to handle large dataframes
+pd.set_option('styler.render.max_elements', 1000000)
+
 # Page configuration
 st.set_page_config(
     page_title="FraudGuard AI - Détection de Fraude",

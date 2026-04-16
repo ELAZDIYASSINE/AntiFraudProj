@@ -91,7 +91,7 @@ services:
     volumes:
       - ./src:/app/src
       - ./data:/app/data
-      - ./.streamlit:/app/.streamlit
+      - ./.streamlit:/app/src/dashboard/.streamlit
     depends_on:
       - api
 

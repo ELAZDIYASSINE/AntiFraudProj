@@ -800,6 +800,128 @@ def main():
     styled_df = display_df.style.apply(highlight_fraud, axis=1)
     st.dataframe(styled_df, use_container_width=True, hide_index=True)
     
+    # File Upload Section
+    st.markdown("---")
+    st.markdown("### 📤 Analyse de Fichier CSV")
+    
+    uploaded_file = st.file_uploader("Télécharger un fichier CSV de transactions", type=['csv'])
+    
+    if uploaded_file is not None:
+        try:
+            # Read the uploaded CSV
+            df_uploaded = pd.read_csv(uploaded_file)
+            
+            # Display basic info
+            st.success(f"Fichier chargé avec succès: {len(df_uploaded)} transactions")
+            
+            # Convert numeric columns
+            numeric_cols = ['step', 'amount', 'oldbalanceOrg', 'newbalanceOrig', 'oldbalanceDest', 'newbalanceDest']
+            for col in numeric_cols:
+                if col in df_uploaded.columns:
+                    df_uploaded[col] = pd.to_numeric(df_uploaded[col], errors='coerce')
+            
+            # Apply fraud detection to all transactions
+            st.info("Analyse des transactions en cours...")
+            predictions_uploaded = []
+            
+            for _, row in df_uploaded.iterrows():
+                fraud_score, reasons, confidence = detect_fraud_rule_based(row)
+                is_fraud = fraud_score > 0.5
+                
+                reason_texts = [r['text'] for r in reasons]
+                reason_display = ' | '.join(reason_texts) if reason_texts else 'Aucun motif suspect'
+                
+                predictions_uploaded.append({
+                    'step': row.get('step', 'N/A'),
+                    'type': row.get('type', 'N/A'),
+                    'amount': row.get('amount', 0),
+                    'nameOrig': row.get('nameOrig', 'N/A'),
+                    'nameDest': row.get('nameDest', 'N/A'),
+                    'is_fraud': is_fraud,
+                    'fraud_probability': fraud_score,
+                    'risk_score': fraud_score,
+                    'fraud_reasons': reason_display,
+                    'confidence': confidence
+                })
+            
+            df_results = pd.DataFrame(predictions_uploaded)
+            
+            # Summary statistics
+            total_count = len(df_results)
+            fraud_count = df_results['is_fraud'].sum()
+            legit_count = total_count - fraud_count
+            fraud_rate = (fraud_count / total_count) * 100 if total_count > 0 else 0
+            
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.metric("Total Transactions", f"{total_count:,}")
+            
+            with col2:
+                st.metric("Fraudes Détectées", f"{fraud_count:,}", delta_color="inverse")
+            
+            with col3:
+                st.metric("Transactions Légitimes", f"{legit_count:,}")
+            
+            with col4:
+                st.metric("Taux de Fraude", f"{fraud_rate:.2f}%")
+            
+            # Display tabs for different views
+            tab1, tab2, tab3 = st.tabs(["🔴 Fraudes Détectées", "✅ Transactions Légitimes", "📊 Toutes les Transactions"])
+            
+            with tab1:
+                fraud_df = df_results[df_results['is_fraud'] == True]
+                if not fraud_df.empty:
+                    st.warning(f"{len(fraud_df)} transactions frauduleuses détectées")
+                    
+                    display_fraud = fraud_df.copy()
+                    display_fraud['amount'] = display_fraud['amount'].apply(lambda x: f"${x:,.2f}" if pd.notnull(x) else "N/A")
+                    display_fraud['fraud_probability'] = display_fraud['fraud_probability'].apply(lambda x: f"{x:.2%}")
+                    display_fraud['risk_score'] = display_fraud['risk_score'].apply(lambda x: f"{x:.3f}")
+                    
+                    cols_to_show = ['step', 'type', 'amount', 'nameOrig', 'nameDest', 'fraud_probability', 'risk_score', 'fraud_reasons']
+                    display_fraud = display_fraud[cols_to_show]
+                    
+                    styled_fraud = display_fraud.style.apply(lambda row: ['background-color: rgba(239, 68, 68, 0.1)'] * len(row), axis=1)
+                    st.dataframe(styled_fraud, use_container_width=True, hide_index=True)
+                else:
+                    st.info("Aucune transaction frauduleuse détectée")
+            
+            with tab2:
+                legit_df = df_results[df_results['is_fraud'] == False]
+                if not legit_df.empty:
+                    st.success(f"{len(legit_df)} transactions légitimes")
+                    
+                    display_legit = legit_df.copy()
+                    display_legit['amount'] = display_legit['amount'].apply(lambda x: f"${x:,.2f}" if pd.notnull(x) else "N/A")
+                    display_legit['fraud_probability'] = display_legit['fraud_probability'].apply(lambda x: f"{x:.2%}")
+                    display_legit['risk_score'] = display_legit['risk_score'].apply(lambda x: f"{x:.3f}")
+                    
+                    cols_to_show = ['step', 'type', 'amount', 'nameOrig', 'nameDest', 'fraud_probability', 'risk_score']
+                    display_legit = display_legit[cols_to_show]
+                    
+                    st.dataframe(display_legit, use_container_width=True, hide_index=True)
+                else:
+                    st.info("Aucune transaction légitime")
+            
+            with tab3:
+                st.info(f"Affichage de toutes les {len(df_results)} transactions analysées")
+                
+                display_all = df_results.copy()
+                display_all['amount'] = display_all['amount'].apply(lambda x: f"${x:,.2f}" if pd.notnull(x) else "N/A")
+                display_all['is_fraud'] = display_all['is_fraud'].apply(lambda x: '⚠️ FRAUDE' if x else '✅ Légitime')
+                display_all['fraud_probability'] = display_all['fraud_probability'].apply(lambda x: f"{x:.2%}")
+                display_all['risk_score'] = display_all['risk_score'].apply(lambda x: f"{x:.3f}")
+                
+                cols_to_show = ['step', 'type', 'amount', 'nameOrig', 'nameDest', 'is_fraud', 'fraud_probability', 'risk_score', 'fraud_reasons']
+                display_all = display_all[cols_to_show]
+                
+                styled_all = display_all.style.apply(highlight_fraud, axis=1)
+                st.dataframe(styled_all, use_container_width=True, hide_index=True)
+                
+        except Exception as e:
+            st.error(f"Erreur lors de l'analyse du fichier: {str(e)}")
+    
     # Model Performance Section
     st.markdown("---")
     st.markdown("### 🤖 Performance du Modèle")

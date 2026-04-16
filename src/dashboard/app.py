@@ -521,6 +521,18 @@ def detect_fraud_rule_based(row):
         fraud_score += 0.3
         reasons.append({'text': 'Transaction CASH_OUT importante', 'severity': 'low', 'weight': 0.3})
     
+    # Règle 9: Montants ronds suspects (9999, 10000, 5000, etc.)
+    if amount > 1000 and amount == round(amount):
+        # Check if amount is a round number (no decimal places)
+        amount_str = str(int(amount))
+        # Check for suspicious patterns like 9999, 10000, 5000, 999, etc.
+        if amount_str in ['9999', '10000', '5000', '999', '1000', '500']:
+            fraud_score += 0.4
+            reasons.append({'text': f'Montant rond suspect ({amount_str} $)', 'severity': 'medium', 'weight': 0.4})
+        elif len(amount_str) >= 4 and amount_str[-4:] in ['0000', '9999', '5000']:
+            fraud_score += 0.3
+            reasons.append({'text': f'Montant rond suspect ({amount_str} $)', 'severity': 'low', 'weight': 0.3})
+    
     # Normaliser le score à la plage 0-1 en utilisant une fonction sigmoïde
     normalized_score = 1 / (1 + np.exp(-10 * (fraud_score - 0.5)))
     

@@ -887,11 +887,36 @@ def main():
                 title='Nombre de Fraudes par Type de Transaction',
                 labels={'fraud_count': 'Nombre de Fraudes', 'type': 'Type de Transaction'},
                 color='fraud_count',
-                color_continuous_scale='Reds',
-                text='fraud_count'
+                color_continuous_scale='viridis',
+                text='fraud_count',
+                template='plotly_dark'
             )
-            fig_type.update_traces(texttemplate='%{y}', textposition='outside')
-            fig_type.update_layout(yaxis_title='Nombre de Fraudes', showlegend=False)
+            fig_type.update_traces(
+                texttemplate='%{y}',
+                textposition='outside',
+                textfont=dict(size=14, family='Inter', color='#E6EDF3'),
+                marker=dict(
+                    line=dict(color='#E6EDF3', width=2),
+                    opacity=0.9
+                )
+            )
+            fig_type.update_layout(
+                yaxis_title='Nombre de Fraudes',
+                showlegend=False,
+                font=dict(size=14, family='Inter', color='#E6EDF3'),
+                title_font=dict(size=18, family='Inter', color='#E6EDF3'),
+                plot_bgcolor='rgba(22, 27, 34, 0.5)',
+                paper_bgcolor='rgba(22, 27, 34, 0.5)',
+                xaxis=dict(
+                    gridcolor='rgba(48, 54, 61, 0.5)',
+                    tickfont=dict(size=12, color='#8B949E')
+                ),
+                yaxis=dict(
+                    gridcolor='rgba(48, 54, 61, 0.5)',
+                    tickfont=dict(size=12, color='#8B949E')
+                ),
+                margin=dict(l=60, r=60, t=80, b=60)
+            )
             st.plotly_chart(fig_type, use_container_width=True)
         
         with chart_tab2:
@@ -909,13 +934,43 @@ def main():
                 title='Distribution des Transactions par Plage de Montant',
                 labels={'value': 'Nombre de Transactions', 'amount_range': 'Plage de Montant ($)'},
                 barmode='group',
-                color_discrete_map={True: '#EF4444', False: '#22C55E'}
+                color_discrete_map={True: '#EF4444', False: '#22C55E'},
+                template='plotly_dark'
             )
             fig_amount.update_layout(
                 xaxis_title='Plage de Montant ($)',
                 yaxis_title='Nombre de Transactions',
-                legend_title='Fraude',
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                legend_title='Statut',
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=1.02,
+                    xanchor="right",
+                    x=1,
+                    font=dict(size=12, family='Inter', color='#E6EDF3'),
+                    bgcolor='rgba(22, 27, 34, 0.8)',
+                    bordercolor='#30363d',
+                    borderwidth=1
+                ),
+                font=dict(size=14, family='Inter', color='#E6EDF3'),
+                title_font=dict(size=18, family='Inter', color='#E6EDF3'),
+                plot_bgcolor='rgba(22, 27, 34, 0.5)',
+                paper_bgcolor='rgba(22, 27, 34, 0.5)',
+                xaxis=dict(
+                    gridcolor='rgba(48, 54, 61, 0.5)',
+                    tickfont=dict(size=12, color='#8B949E')
+                ),
+                yaxis=dict(
+                    gridcolor='rgba(48, 54, 61, 0.5)',
+                    tickfont=dict(size=12, color='#8B949E')
+                ),
+                margin=dict(l=60, r=60, t=80, b=60)
+            )
+            fig_amount.update_traces(
+                marker=dict(
+                    line=dict(color='#E6EDF3', width=2),
+                    opacity=0.9
+                )
             )
             fig_amount.for_each_trace(lambda t: t.update(name='Fraude' if t.name == 'True' else 'Légitime'))
             st.plotly_chart(fig_amount, use_container_width=True)

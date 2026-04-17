@@ -817,7 +817,14 @@ def main():
                 if not fraud_df.empty:
                     st.warning(f"{len(fraud_df)} transactions frauduleuses détectées")
                     
-                    display_fraud = fraud_df.copy()
+                    # Limit display to prevent crash with large datasets
+                    DISPLAY_LIMIT = 1000
+                    if len(fraud_df) > DISPLAY_LIMIT:
+                        st.info(f"⚠️ Affichage limité aux {DISPLAY_LIMIT} premières transactions frauduleuses sur {len(fraud_df):,}")
+                        display_fraud = fraud_df.head(DISPLAY_LIMIT).copy()
+                    else:
+                        display_fraud = fraud_df.copy()
+                    
                     display_fraud['amount'] = display_fraud['amount'].apply(lambda x: f"${x:,.2f}" if pd.notnull(x) else "N/A")
                     display_fraud['fraud_probability'] = display_fraud['fraud_probability'].apply(lambda x: f"{x:.2%}")
                     display_fraud['risk_score'] = display_fraud['risk_score'].apply(lambda x: f"{x:.3f}")
@@ -835,7 +842,14 @@ def main():
                 if not legit_df.empty:
                     st.success(f"{len(legit_df)} transactions légitimes")
                     
-                    display_legit = legit_df.copy()
+                    # Limit display to prevent crash with large datasets
+                    DISPLAY_LIMIT = 1000
+                    if len(legit_df) > DISPLAY_LIMIT:
+                        st.info(f"⚠️ Affichage limité aux {DISPLAY_LIMIT} premières transactions légitimes sur {len(legit_df):,}")
+                        display_legit = legit_df.head(DISPLAY_LIMIT).copy()
+                    else:
+                        display_legit = legit_df.copy()
+                    
                     display_legit['amount'] = display_legit['amount'].apply(lambda x: f"${x:,.2f}" if pd.notnull(x) else "N/A")
                     display_legit['fraud_probability'] = display_legit['fraud_probability'].apply(lambda x: f"{x:.2%}")
                     display_legit['risk_score'] = display_legit['risk_score'].apply(lambda x: f"{x:.3f}")
@@ -850,7 +864,14 @@ def main():
             with tab3:
                 st.info(f"Affichage de toutes les {len(df_results)} transactions analysées")
                 
-                display_all = df_results.copy()
+                # Limit display to prevent crash with large datasets
+                DISPLAY_LIMIT = 1000
+                if len(df_results) > DISPLAY_LIMIT:
+                    st.info(f"⚠️ Affichage limité aux {DISPLAY_LIMIT} premières transactions sur {len(df_results):,}")
+                    display_all = df_results.head(DISPLAY_LIMIT).copy()
+                else:
+                    display_all = df_results.copy()
+                
                 display_all['amount'] = display_all['amount'].apply(lambda x: f"${x:,.2f}" if pd.notnull(x) else "N/A")
                 display_all['is_fraud'] = display_all['is_fraud'].apply(lambda x: '⚠️ FRAUDE' if x else '✅ Légitime')
                 display_all['fraud_probability'] = display_all['fraud_probability'].apply(lambda x: f"{x:.2%}")
